@@ -11,11 +11,33 @@ class LandingView extends StatefulWidget {
   State<LandingView> createState() => _LandingViewState();
 }
 
-class _LandingViewState extends State<LandingView> {
+class _LandingViewState extends State<LandingView>
+    with SingleTickerProviderStateMixin {
   final LandingController _controller = LandingController();
+  late final TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(
+      length: LandingController.landingTabLabels.length,
+      vsync: this,
+    );
+    _tabController.addListener(_onTabChanged);
+  }
+
+  void _onTabChanged() {
+    if (_tabController.indexIsChanging) return;
+    final index = _tabController.index;
+    if (_controller.selectedTabIndex != index) {
+      _controller.selectedTabIndex = index;
+    }
+  }
 
   @override
   void dispose() {
+    _tabController.removeListener(_onTabChanged);
+    _tabController.dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -23,44 +45,44 @@ class _LandingViewState extends State<LandingView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(
-            child: ListenableBuilder(
-              listenable: _controller,
-              builder: (context, _) {
-                return HeaderCarousel(
-                  items: _controller.carouselItems,
-                  currentIndex: _controller.currentCarouselIndex,
-                  onPageChanged: (index) {
-                    _controller.currentCarouselIndex = index;
-                  },
-                  height: 200,
-                );
-              },
-            ),
+      body: Column(
+        children: [
+          ListenableBuilder(
+            listenable: _controller,
+            builder: (context, _) {
+              return HeaderCarousel(
+                items: _controller.carouselItems,
+                currentIndex: _controller.currentCarouselIndex,
+                onPageChanged: (index) {
+                  _controller.currentCarouselIndex = index;
+                },
+                height: 200,
+              );
+            },
           ),
-          SliverToBoxAdapter(
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
             child: ListenableBuilder(
               listenable: _controller,
               builder: (context, _) {
-                return Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                  child: Row(
-                    children: List.generate(
-                      LandingController.landingTabLabels.length,
-                      (index) => Expanded(
-                        child: Padding(
-                          padding: EdgeInsets.only(
-                            right: index < LandingController.landingTabLabels.length - 1
-                                ? 8
-                                : 0,
-                          ),
-                          child: _LandingTab(
-                            label: LandingController.landingTabLabels[index],
-                            isSelected: _controller.selectedTabIndex == index,
-                            onTap: () => _controller.selectedTabIndex = index,
-                          ),
+                return Row(
+                  children: List.generate(
+                    LandingController.landingTabLabels.length,
+                    (index) => Expanded(
+                      child: Padding(
+                        padding: EdgeInsets.only(
+                          right: index <
+                                  LandingController.landingTabLabels.length - 1
+                              ? 8
+                              : 0,
+                        ),
+                        child: _LandingTab(
+                          label: LandingController.landingTabLabels[index],
+                          isSelected: _controller.selectedTabIndex == index,
+                          onTap: () {
+                            _controller.selectedTabIndex = index;
+                            _tabController.animateTo(index);
+                          },
                         ),
                       ),
                     ),
@@ -69,105 +91,88 @@ class _LandingViewState extends State<LandingView> {
               },
             ),
           ),
-          SliverToBoxAdapter(
-            child: ListenableBuilder(
-              listenable: _controller,
-              builder: (context, _) {
-                if (_controller.selectedTabIndex != 0) {
-                  return SizedBox(
-                    height: 200,
-                    child: Center(
-                      child: Text(
-                        'Welcome to Product Flow',
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleLarge
-                            ?.copyWith(color: Colors.grey.shade600),
-                      ),
-                    ),
-                  );
-                }
-                return const SizedBox.shrink();
-              },
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _TabProductsContent(controller: _controller),
+                _TabProductsContent(controller: _controller),
+                _TabProductsContent(controller: _controller),
+              ],
             ),
-          ),
-          ListenableBuilder(
-            listenable: _controller,
-            builder: (context, _) {
-              if (_controller.selectedTabIndex != 0) {
-                return const SliverToBoxAdapter(child: SizedBox.shrink());
-              }
-              if (_controller.productsLoading) {
-                return const SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              }
-              if (_controller.productsError != null) {
-                return SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'Could not load products',
-                            style: Theme.of(context).textTheme.titleMedium,
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            _controller.productsError!,
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: Colors.grey,
-                                ),
-                            textAlign: TextAlign.center,
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 16),
-                          FilledButton.icon(
-                            onPressed: _controller.loadProducts,
-                            icon: const Icon(Icons.refresh),
-                            label: const Text('Retry'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              }
-              if (_controller.products.isEmpty) {
-                return SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Center(
-                    child: Text(
-                      'No products',
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium
-                          ?.copyWith(color: Colors.grey.shade600),
-                    ),
-                  ),
-                );
-              }
-              return SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) => _ProductCard(
-                      product: _controller.products[index],
-                    ),
-                    childCount: _controller.products.length,
-                  ),
-                ),
-              );
-            },
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Product list content for one tab (loading / error / list).
+class _TabProductsContent extends StatelessWidget {
+  const _TabProductsContent({required this.controller});
+
+  final LandingController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: controller,
+      builder: (context, _) {
+        if (controller.productsLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (controller.productsError != null) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Could not load products',
+                    style: Theme.of(context).textTheme.titleMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    controller.productsError!,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.grey,
+                        ),
+                    textAlign: TextAlign.center,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 16),
+                  FilledButton.icon(
+                    onPressed: controller.loadProducts,
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Retry'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+        if (controller.products.isEmpty) {
+          return Center(
+            child: Text(
+              'No products',
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium
+                  ?.copyWith(color: Colors.grey.shade600),
+            ),
+          );
+        }
+        return ListView.builder(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+          itemCount: controller.products.length,
+          itemBuilder: (context, index) => _ProductCard(
+            product: controller.products[index],
+          ),
+        );
+      },
     );
   }
 }
