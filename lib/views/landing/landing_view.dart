@@ -24,18 +24,29 @@ class _LandingViewState extends State<LandingView>
       vsync: this,
     );
     _tabController.addListener(_onTabChanged);
+    _tabController.animation?.addListener(_onTabAnimation);
   }
 
   void _onTabChanged() {
-    if (_tabController.indexIsChanging) return;
     final index = _tabController.index;
     if (_controller.selectedTabIndex != index) {
       _controller.selectedTabIndex = index;
     }
   }
 
+  void _onTabAnimation() {
+    final length = _tabController.length;
+    final visualIndex = (_tabController.animation!.value + 0.5)
+        .floor()
+        .clamp(0, length - 1);
+    if (_controller.selectedTabIndex != visualIndex) {
+      _controller.selectedTabIndex = visualIndex;
+    }
+  }
+
   @override
   void dispose() {
+    _tabController.animation?.removeListener(_onTabAnimation);
     _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
     _controller.dispose();
