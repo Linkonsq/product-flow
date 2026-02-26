@@ -82,29 +82,29 @@ class _HeaderCarouselState extends State<HeaderCarousel> {
 
     return SizedBox(
       height: widget.height,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+      child: Stack(
         children: [
-          Expanded(
-            child: PageView.builder(
-              controller: _pageController,
-              onPageChanged: widget.onPageChanged,
-              itemCount: widget.items.length,
-              itemBuilder: (context, index) {
-                final item = widget.items[index];
-                return _CarouselSlide(
-                  imageUrl: item.imageUrl,
-                  caption: item.caption,
-                );
-              },
+          PageView.builder(
+            controller: _pageController,
+            onPageChanged: widget.onPageChanged,
+            itemCount: widget.items.length,
+            itemBuilder: (context, index) {
+              final item = widget.items[index];
+              return _CarouselSlide(
+                imageUrl: item.imageUrl,
+                caption: item.caption,
+              );
+            },
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 16,
+            child: _PageIndicator(
+              count: widget.items.length,
+              currentIndex: widget.currentIndex,
             ),
           ),
-          const SizedBox(height: 8),
-          _PageIndicator(
-            count: widget.items.length,
-            currentIndex: widget.currentIndex,
-          ),
-          const SizedBox(height: 12),
         ],
       ),
     );
@@ -193,7 +193,14 @@ class _PageIndicator extends StatelessWidget {
             shape: BoxShape.circle,
             color: currentIndex == index
                 ? Theme.of(context).colorScheme.primary
-                : Colors.grey.shade400,
+                : Colors.white.withValues(alpha: 0.7),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.3),
+                blurRadius: 2,
+                offset: const Offset(0, 1),
+              ),
+            ],
           ),
         ),
       ),

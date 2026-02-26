@@ -39,6 +39,35 @@ class _LandingViewState extends State<LandingView> {
               },
             ),
           ),
+          SliverToBoxAdapter(
+            child: ListenableBuilder(
+              listenable: _controller,
+              builder: (context, _) {
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                  child: Row(
+                    children: List.generate(
+                      LandingController.landingTabLabels.length,
+                      (index) => Expanded(
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                            right: index < LandingController.landingTabLabels.length - 1
+                                ? 8
+                                : 0,
+                          ),
+                          child: _LandingTab(
+                            label: LandingController.landingTabLabels[index],
+                            isSelected: _controller.selectedTabIndex == index,
+                            onTap: () => _controller.selectedTabIndex = index,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
           SliverFillRemaining(
             hasScrollBody: false,
             child: Padding(
@@ -54,6 +83,47 @@ class _LandingViewState extends State<LandingView> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _LandingTab extends StatelessWidget {
+  const _LandingTab({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      color: isSelected
+          ? theme.colorScheme.primaryContainer
+          : theme.colorScheme.surfaceContainerHighest,
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          alignment: Alignment.center,
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.labelLarge?.copyWith(
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+              color: isSelected
+                  ? theme.colorScheme.onPrimaryContainer
+                  : theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
       ),
     );
   }

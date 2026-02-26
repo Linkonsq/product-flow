@@ -18,6 +18,22 @@ class LandingController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Tab labels
+  static const List<String> landingTabLabels = [
+    'Ramadan Sale',
+    'Free Delivery',
+    'New Arrivals',
+  ];
+
+  int _selectedTabIndex = 0;
+  int get selectedTabIndex => _selectedTabIndex;
+  set selectedTabIndex(int value) {
+    if (value < 0 || value >= landingTabLabels.length) return;
+    if (_selectedTabIndex == value) return;
+    _selectedTabIndex = value;
+    notifyListeners();
+  }
+
   void _initCarouselItems() {
     // Product image URLs from Fake Store API (current format: _t.png)
     _carouselItems.addAll([
