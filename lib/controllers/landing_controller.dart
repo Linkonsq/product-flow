@@ -1,11 +1,17 @@
 import 'package:flutter/foundation.dart';
 
 import '../models/carousel_item.dart';
+import '../models/product.dart';
+import '../services/http_service.dart';
 
 class LandingController extends ChangeNotifier {
-  LandingController() {
+  LandingController({HttpService? httpService})
+      : _httpService = httpService ?? HttpService() {
     _initCarouselItems();
+    loadProducts();
   }
+
+  final HttpService _httpService;
 
   final List<CarouselItem> _carouselItems = [];
   List<CarouselItem> get carouselItems => List.unmodifiable(_carouselItems);
@@ -32,6 +38,35 @@ class LandingController extends ChangeNotifier {
     if (_selectedTabIndex == value) return;
     _selectedTabIndex = value;
     notifyListeners();
+  }
+
+  // Products (first tab)
+  final List<Product> _products = [];
+  List<Product> get products => List.unmodifiable(_products);
+
+  bool _productsLoading = true;
+  bool get productsLoading => _productsLoading;
+
+  String? _productsError;
+  String? get productsError => _productsError;
+
+  Future<void> loadProducts() async {
+    _productsLoading = true;
+    _productsError = null;
+    notifyListeners();
+    try {
+      final list = await _httpService.getProducts();
+      _products
+        ..clear()
+        ..addAll(list);
+      _productsError = null;
+    } catch (e, stack) {
+      _productsError = e.toString();
+      debugPrintStack(stackTrace: stack);
+    } finally {
+      _productsLoading = false;
+      notifyListeners();
+    }
   }
 
   void _initCarouselItems() {
