@@ -36,9 +36,10 @@ class _LandingViewState extends State<LandingView>
 
   void _onTabAnimation() {
     final length = _tabController.length;
-    final visualIndex = (_tabController.animation!.value + 0.5)
-        .floor()
-        .clamp(0, length - 1);
+    final visualIndex = (_tabController.animation!.value + 0.5).floor().clamp(
+      0,
+      length - 1,
+    );
     if (_controller.selectedTabIndex != visualIndex) {
       _controller.selectedTabIndex = visualIndex;
     }
@@ -56,8 +57,15 @@ class _LandingViewState extends State<LandingView>
   static const double _carouselHeight = 200;
   static const double _tabBarHeight = 72;
 
+  /// Top padding above tabs when pinned;
+  static double _topSafePadding(BuildContext context) {
+    final top = MediaQuery.paddingOf(context).top;
+    return (top * 0.5).clamp(8, top);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final topPadding = _topSafePadding(context);
     return Scaffold(
       body: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) {
@@ -88,6 +96,7 @@ class _LandingViewState extends State<LandingView>
                   controller: _controller,
                   tabController: _tabController,
                   height: _tabBarHeight,
+                  topSafePadding: topPadding,
                 ),
               ),
             ),
@@ -111,17 +120,19 @@ class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
     required this.controller,
     required this.tabController,
     required this.height,
+    this.topSafePadding = 0,
   });
 
   final LandingController controller;
   final TabController tabController;
   final double height;
+  final double topSafePadding;
 
   @override
-  double get minExtent => height;
+  double get minExtent => height + topSafePadding;
 
   @override
-  double get maxExtent => height;
+  double get maxExtent => height + topSafePadding;
 
   @override
   Widget build(
@@ -134,15 +145,19 @@ class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
       builder: (context, _) {
         return Container(
           color: Theme.of(context).scaffoldBackgroundColor,
-          padding: const EdgeInsets.fromLTRB(12, 6, 12, 12),
+          padding: EdgeInsets.only(
+            top: topSafePadding,
+            left: 12,
+            right: 12,
+            bottom: 12,
+          ),
           child: Row(
             children: List.generate(
               LandingController.landingTabLabels.length,
               (index) => Expanded(
                 child: Padding(
                   padding: EdgeInsets.only(
-                    right: index <
-                            LandingController.landingTabLabels.length - 1
+                    right: index < LandingController.landingTabLabels.length - 1
                         ? 6
                         : 0,
                   ),
@@ -167,7 +182,8 @@ class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
   bool shouldRebuild(covariant _StickyTabBarDelegate oldDelegate) {
     return oldDelegate.controller != controller ||
         oldDelegate.tabController != tabController ||
-        oldDelegate.height != height;
+        oldDelegate.height != height ||
+        oldDelegate.topSafePadding != topSafePadding;
   }
 }
 
@@ -200,9 +216,9 @@ class _TabProductsContent extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     controller.productsError!,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey,
-                        ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: Colors.grey),
                     textAlign: TextAlign.center,
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
@@ -222,10 +238,9 @@ class _TabProductsContent extends StatelessWidget {
           return Center(
             child: Text(
               'No products',
-              style: Theme.of(context)
-                  .textTheme
-                  .titleMedium
-                  ?.copyWith(color: Colors.grey.shade600),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(color: Colors.grey.shade600),
             ),
           );
         }
@@ -238,9 +253,8 @@ class _TabProductsContent extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
               sliver: SliverList(
                 delegate: SliverChildBuilderDelegate(
-                  (context, index) => _ProductCard(
-                    product: controller.products[index],
-                  ),
+                  (context, index) =>
+                      _ProductCard(product: controller.products[index]),
                   childCount: controller.products.length,
                 ),
               ),
