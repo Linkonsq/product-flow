@@ -105,9 +105,9 @@ class _LandingViewState extends State<LandingView>
         body: TabBarView(
           controller: _tabController,
           children: [
-            _TabProductsContent(controller: _controller),
-            _TabProductsContent(controller: _controller),
-            _TabProductsContent(controller: _controller),
+            _TabProductsContent(controller: _controller, tabIndex: 0),
+            _TabProductsContent(controller: _controller, tabIndex: 1),
+            _TabProductsContent(controller: _controller, tabIndex: 2),
           ],
         ),
       ),
@@ -188,10 +188,15 @@ class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
 }
 
 /// Product list content for one tab (loading / error / list).
+/// [tabIndex] is used for [PageStorageKey] so each tab keeps its own scroll position.
 class _TabProductsContent extends StatelessWidget {
-  const _TabProductsContent({required this.controller});
+  const _TabProductsContent({
+    required this.controller,
+    required this.tabIndex,
+  });
 
   final LandingController controller;
+  final int tabIndex;
 
   @override
   Widget build(BuildContext context) {
@@ -245,6 +250,7 @@ class _TabProductsContent extends StatelessWidget {
           );
         }
         return CustomScrollView(
+          key: PageStorageKey('landing_products_tab_$tabIndex'),
           slivers: [
             SliverOverlapInjector(
               handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
