@@ -53,68 +53,121 @@ class _LandingViewState extends State<LandingView>
     super.dispose();
   }
 
+  static const double _carouselHeight = 200;
+  static const double _tabBarHeight = 72;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          ListenableBuilder(
-            listenable: _controller,
-            builder: (context, _) {
-              return HeaderCarousel(
-                items: _controller.carouselItems,
-                currentIndex: _controller.currentCarouselIndex,
-                onPageChanged: (index) {
-                  _controller.currentCarouselIndex = index;
-                },
-                height: 200,
-              );
-            },
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-            child: ListenableBuilder(
-              listenable: _controller,
-              builder: (context, _) {
-                return Row(
-                  children: List.generate(
-                    LandingController.landingTabLabels.length,
-                    (index) => Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.only(
-                          right: index <
-                                  LandingController.landingTabLabels.length - 1
-                              ? 8
-                              : 0,
-                        ),
-                        child: _LandingTab(
-                          label: LandingController.landingTabLabels[index],
-                          isSelected: _controller.selectedTabIndex == index,
-                          onTap: () {
-                            _controller.selectedTabIndex = index;
-                            _tabController.animateTo(index);
-                          },
-                        ),
-                      ),
+      body: NestedScrollView(
+        headerSliverBuilder: (context, innerBoxIsScrolled) {
+          return [
+            SliverToBoxAdapter(
+              child: ListenableBuilder(
+                listenable: _controller,
+                builder: (context, _) {
+                  return SizedBox(
+                    height: _carouselHeight,
+                    child: HeaderCarousel(
+                      items: _controller.carouselItems,
+                      currentIndex: _controller.currentCarouselIndex,
+                      onPageChanged: (index) {
+                        _controller.currentCarouselIndex = index;
+                      },
+                      height: _carouselHeight,
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-          ),
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _TabProductsContent(controller: _controller),
-                _TabProductsContent(controller: _controller),
-                _TabProductsContent(controller: _controller),
-              ],
+            SliverOverlapAbsorber(
+              handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+              sliver: SliverPersistentHeader(
+                pinned: true,
+                delegate: _StickyTabBarDelegate(
+                  controller: _controller,
+                  tabController: _tabController,
+                  height: _tabBarHeight,
+                ),
+              ),
             ),
-          ),
-        ],
+          ];
+        },
+        body: TabBarView(
+          controller: _tabController,
+          children: [
+            _TabProductsContent(controller: _controller),
+            _TabProductsContent(controller: _controller),
+            _TabProductsContent(controller: _controller),
+          ],
+        ),
       ),
     );
+  }
+}
+
+class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
+  _StickyTabBarDelegate({
+    required this.controller,
+    required this.tabController,
+    required this.height,
+  });
+
+  final LandingController controller;
+  final TabController tabController;
+  final double height;
+
+  @override
+  double get minExtent => height;
+
+  @override
+  double get maxExtent => height;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return ListenableBuilder(
+      listenable: controller,
+      builder: (context, _) {
+        return Container(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          padding: const EdgeInsets.fromLTRB(12, 6, 12, 12),
+          child: Row(
+            children: List.generate(
+              LandingController.landingTabLabels.length,
+              (index) => Expanded(
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    right: index <
+                            LandingController.landingTabLabels.length - 1
+                        ? 6
+                        : 0,
+                  ),
+                  child: _LandingTab(
+                    label: LandingController.landingTabLabels[index],
+                    isSelected: controller.selectedTabIndex == index,
+                    onTap: () {
+                      controller.selectedTabIndex = index;
+                      tabController.animateTo(index);
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  bool shouldRebuild(covariant _StickyTabBarDelegate oldDelegate) {
+    return oldDelegate.controller != controller ||
+        oldDelegate.tabController != tabController ||
+        oldDelegate.height != height;
   }
 }
 
@@ -176,12 +229,23 @@ class _TabProductsContent extends StatelessWidget {
             ),
           );
         }
-        return ListView.builder(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-          itemCount: controller.products.length,
-          itemBuilder: (context, index) => _ProductCard(
-            product: controller.products[index],
-          ),
+        return CustomScrollView(
+          slivers: [
+            SliverOverlapInjector(
+              handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) => _ProductCard(
+                    product: controller.products[index],
+                  ),
+                  childCount: controller.products.length,
+                ),
+              ),
+            ),
+          ],
         );
       },
     );
@@ -281,17 +345,20 @@ class _LandingTab extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(8),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          alignment: Alignment.center,
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: theme.textTheme.labelLarge?.copyWith(
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-              color: isSelected
-                  ? theme.colorScheme.onPrimaryContainer
-                  : theme.colorScheme.onSurfaceVariant,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+          child: Center(
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.labelMedium?.copyWith(
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                color: isSelected
+                    ? theme.colorScheme.onPrimaryContainer
+                    : theme.colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
         ),
