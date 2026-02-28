@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:http/http.dart' as http;
 
 import '../constants/api_constants.dart';
@@ -45,20 +44,15 @@ class HttpService {
         .toList();
   }
 
-  /// POST login. Request: { "username": "string", "password": "string" }.
-  /// Response: { "token": "string" }.
   Future<String> login(String username, String password) async {
-    final body = await post(
-      ApiConstants.authLoginUrl,
-      <String, String>{'username': username, 'password': password},
-    );
+    final body = await post(ApiConstants.authLoginUrl, <String, String>{
+      'username': username,
+      'password': password,
+    });
     final map = json.decode(body) as Map<String, dynamic>;
     final token = map['token'] as String?;
     if (token == null || token.isEmpty) {
-      throw HttpServiceException(
-        statusCode: 200,
-        body: body,
-      );
+      throw HttpServiceException(statusCode: 200, body: body);
     }
     return token;
   }

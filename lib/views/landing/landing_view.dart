@@ -60,7 +60,7 @@ class _LandingViewState extends State<LandingView>
   /// Top padding above tabs when pinned;
   static double _topSafePadding(BuildContext context) {
     final top = MediaQuery.paddingOf(context).top;
-    return (top * 0.5).clamp(8, top);
+    return (top * 0.8).clamp(8, top);
   }
 
   @override
@@ -190,10 +190,7 @@ class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
 /// Product list content for one tab (loading / error / list).
 /// [tabIndex] is used for [PageStorageKey] so each tab keeps its own scroll position.
 class _TabProductsContent extends StatelessWidget {
-  const _TabProductsContent({
-    required this.controller,
-    required this.tabIndex,
-  });
+  const _TabProductsContent({required this.controller, required this.tabIndex});
 
   final LandingController controller;
   final int tabIndex;
@@ -212,7 +209,9 @@ class _TabProductsContent extends StatelessWidget {
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
                 SliverOverlapInjector(
-                  handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+                  handle: NestedScrollView.sliverOverlapAbsorberHandleFor(
+                    context,
+                  ),
                 ),
                 const SliverFillRemaining(
                   hasScrollBody: false,
@@ -229,7 +228,9 @@ class _TabProductsContent extends StatelessWidget {
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
                 SliverOverlapInjector(
-                  handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+                  handle: NestedScrollView.sliverOverlapAbsorberHandleFor(
+                    context,
+                  ),
                 ),
                 SliverFillRemaining(
                   hasScrollBody: false,
@@ -247,10 +248,9 @@ class _TabProductsContent extends StatelessWidget {
                           const SizedBox(height: 8),
                           Text(
                             controller.productsError!,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
-                                ?.copyWith(color: Colors.grey),
+                            style: Theme.of(
+                              context,
+                            ).textTheme.bodySmall?.copyWith(color: Colors.grey),
                             textAlign: TextAlign.center,
                             maxLines: 3,
                             overflow: TextOverflow.ellipsis,
@@ -277,17 +277,18 @@ class _TabProductsContent extends StatelessWidget {
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
                 SliverOverlapInjector(
-                  handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+                  handle: NestedScrollView.sliverOverlapAbsorberHandleFor(
+                    context,
+                  ),
                 ),
                 SliverFillRemaining(
                   hasScrollBody: false,
                   child: Center(
                     child: Text(
                       'No products',
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium
-                          ?.copyWith(color: Colors.grey.shade600),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: Colors.grey.shade600,
+                      ),
                     ),
                   ),
                 ),
@@ -302,7 +303,9 @@ class _TabProductsContent extends StatelessWidget {
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
               SliverOverlapInjector(
-                handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+                handle: NestedScrollView.sliverOverlapAbsorberHandleFor(
+                  context,
+                ),
               ),
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),

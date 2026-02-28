@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:flutter/foundation.dart';
 
 import '../services/auth_storage.dart';
@@ -7,11 +6,9 @@ import '../services/http_service.dart';
 
 /// Controller for the Account screen (login form and auth state).
 class AccountController extends ChangeNotifier {
-  AccountController({
-    HttpService? httpService,
-    AuthStorage? authStorage,
-  })  : _httpService = httpService ?? HttpService(),
-        _authStorage = authStorage ?? AuthStorage();
+  AccountController({HttpService? httpService, AuthStorage? authStorage})
+    : _httpService = httpService ?? HttpService(),
+      _authStorage = authStorage ?? AuthStorage();
 
   final HttpService _httpService;
   final AuthStorage _authStorage;
@@ -120,9 +117,7 @@ class AccountController extends ChangeNotifier {
   static Map<String, dynamic> _parseJson(String source) {
     try {
       final decoded = json.decode(source);
-      return decoded is Map<String, dynamic>
-          ? decoded
-          : <String, dynamic>{};
+      return decoded is Map<String, dynamic> ? decoded : <String, dynamic>{};
     } catch (_) {
       return <String, dynamic>{};
     }

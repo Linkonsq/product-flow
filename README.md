@@ -4,6 +4,25 @@ A Flutter e-commerce app with a landing screen (carousel, category tabs, product
 
 ---
 
+## APK download
+
+Pre-built Android APK (for testing without building locally):
+
+**[Download APK from Google Drive](https://drive.google.com/file/d/1buNYcLv1Ec9miY_R-uJ5rF0VtmUAKZAw/view?usp=sharing)**
+
+---
+
+## Test login credentials
+
+Use these credentials to sign in on the **Account** tab:
+
+| Field    | Value     |
+|----------|-----------|
+| Username | `mor_2314` |
+| Password | `83r5^_`   |
+
+---
+
 ## Run instructions
 
 **Requirements:** Flutter **3.41.0** (or compatible SDK).
